@@ -1,16 +1,16 @@
 import pygame
 import sys
-from board import Board
+from Board import Board
 from sudoku_generator import generate_sudoku
 
 pygame.init()
 
-# Settings - TODO: Discuss window size
+# Settings
 WIDTH, HEIGHT = 540, 540
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT + 100))
-pygame.display.set_caption("Sudoku")  # TODO: Discuss window title
+pygame.display.set_caption("Sudoku")
 
-# Fonts - TODO: We can also abstract this to export to be used within Cell and Board classes to avoid duplication
+# Fonts
 FONT = pygame.font.SysFont('arial', 40)
 SMALL_FONT = pygame.font.SysFont('arial', 20)
 
@@ -21,7 +21,7 @@ DIFFICULTY_LEVELS = {
     'hard': 50
 }
 
-# Colors - TODO: Discuss colors and styles
+# Colors
 WHITE = pygame.Color('white')
 BLACK = pygame.Color('black')
 GRAY = pygame.Color('gray')
@@ -29,7 +29,7 @@ BUTTON_COLOR = pygame.Color('#E0E0E0')
 BUTTON_HOVER_COLOR = pygame.Color('#BDBDBD')
 BUTTON_TEXT_COLOR = pygame.Color('black')
 
-# Button design config - TODO: Discuss colors and styles
+# Button design config
 BUTTON_WIDTH = 150
 BUTTON_HEIGHT = 50
 BUTTON_PADDING = 20
@@ -179,10 +179,9 @@ def game_loop(screen, board):
                     board.place_number()
                     if board.is_full():
                         if board.check_board():
-                            draw_end_screen(screen, "Game Won!")
+                            win_screen(screen)
                         else:
-                            draw_end_screen(screen, "Game Over :(")
-                        main()
+                            lose_screen(screen)
                 elif event.key in range(pygame.K_1, pygame.K_9 + 1):
                     value = event.key - pygame.K_0
                     board.sketch(value)
@@ -194,6 +193,59 @@ def game_loop(screen, board):
                     board.move_selection('left')
                 elif event.key == pygame.K_RIGHT:
                     board.move_selection('right')
+
+def draw_action_button(screen, label, rect, mouse_pos):
+    """
+    Draws a button with hover effect.
+    """
+    color = BUTTON_HOVER_COLOR if rect.collidepoint(mouse_pos) else BUTTON_COLOR
+    pygame.draw.rect(screen, color, rect, border_radius=5)
+    text_surface = SMALL_FONT.render(label, True, BUTTON_TEXT_COLOR)
+    text_rect = text_surface.get_rect(center=rect.center)
+    screen.blit(text_surface, text_rect)
+
+
+def win_screen(screen):
+    """
+    Display the win screen with an Exit button.
+    """
+    button_rect = pygame.Rect((WIDTH - BUTTON_WIDTH) // 2, (HEIGHT + 100) // 2, BUTTON_WIDTH, BUTTON_HEIGHT)
+
+    while True:
+        mouse_pos = pygame.mouse.get_pos()
+        screen.fill(WHITE)
+        draw_text_center(screen, "Game Won!", FONT, BLACK)
+        draw_action_button(screen, "Exit", button_rect, mouse_pos)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and button_rect.collidepoint(mouse_pos):
+                pygame.quit()
+                sys.exit()
+
+
+def lose_screen(screen):
+    """
+    Display the lose screen with a Restart button.
+    """
+    button_rect = pygame.Rect((WIDTH - BUTTON_WIDTH) // 2, (HEIGHT + 100) // 2, BUTTON_WIDTH, BUTTON_HEIGHT)
+
+    while True:
+        mouse_pos = pygame.mouse.get_pos()
+        screen.fill(WHITE)
+        draw_text_center(screen, "Game Over :(", FONT, BLACK)
+        draw_action_button(screen, "Restart", button_rect, mouse_pos)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and button_rect.collidepoint(mouse_pos):
+                main()
 
 
 def main():
